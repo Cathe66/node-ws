@@ -35,32 +35,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/rep1989:latest
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.description=http server
-            org.opencontainers.image.licenses=MIT
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-       # 1. 先執行轉換（這個要放在最前面）
+      # 1. 關鍵修正：必須先執行轉換為小寫的動作
       - name: 準備小寫的映像檔名稱
         run: |
-          # 使用 bash 的 ,, 運算子將變數轉為全小寫
+          # 使用 bash 的 ,, 運算子將變數轉為全小寫並存入環境變數
           echo "REPO_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      # 2. 再執行構建與推送
+      # 2. 使用處理過的小寫變數進行構建與推送
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # 這裡使用 env.REPO_NAME，它已經是全小寫了
+          # 這裡引用 env.REPO_NAME，確保標籤路徑全為小寫
           tags: ghcr.io/${{ env.REPO_NAME }}:latest
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
